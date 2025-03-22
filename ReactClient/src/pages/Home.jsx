@@ -56,6 +56,11 @@ const Home = () => {
       {summonerData && (
         <div className="mt-6 p-5 bg-neutral-800 bg-opacity-50 backdrop-blur-lg rounded-lg shadow-xl border border-neutral-700">
           <h2 className="text-xl font-semibold text-cyan-400">Summoner Info</h2>
+          <img
+            src={summonerData.profileIconUrl}
+            alt="Profile Icon"
+            className="w-16 h-16 rounded-full mt-2"
+          />
           <p className="mt-2">
             <strong className="text-gray-400">Name:</strong> {summonerData.name}
           </p>
@@ -70,3 +75,5 @@ const Home = () => {
 };
 
 export default Home;
+
+

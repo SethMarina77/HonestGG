@@ -42,7 +42,7 @@ app.get("/api/summoner/:gameName/:tagLine", async (req, res) => {
         });
         console.log("Match history received:", matchHistoryResponse.data);
 
-        // Step 3: Get Summoner Data by using PUUID
+        // Step 3: Get Summoner Data
         const summonerUrl = `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`;
         const summonerResponse = await axios.get(summonerUrl, {
             headers: { "X-Riot-Token": API_KEY }
@@ -50,20 +50,29 @@ app.get("/api/summoner/:gameName/:tagLine", async (req, res) => {
 
         console.log("Summoner data received:", summonerResponse.data);
 
-        // Step 4: Merge all data into a single response
+        // Step 4: Generate Profile Icon URL
+        const latestPatch = "25.06"; // Update this dynamically if needed
+        const profileIconUrl = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/${summonerResponse.data.profileIconId}.jpg`;
+
+        //const profileIconUrl = `https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/${summonerResponse.data.profileIconId}.png`;
+
+        // Step 5: Merge all data into a single response
         const summonerData = {
             ...summonerResponse.data,
             name: returnedGameName, // Add the gameName
             tagline: returnedTagLine, // Optional: Add the tagline
-            matchHistory: matchHistoryResponse.data // Add match history
+            matchHistory: matchHistoryResponse.data, // Add match history
+            profileIconUrl: profileIconUrl // Add profile icon URL
         };
 
+        console.log("Profile Icon URL:", summonerData.profileIconUrl);
         res.json(summonerData);
     } catch (error) {
         console.error("Error fetching summoner data:", error.response ? error.response.data : error.message);
         res.status(500).json({ message: "Server error", error: error.response?.data || error.message });
     }
 });
+
 
 
 
