@@ -1,6 +1,7 @@
-node_modules
-dist
-dist-ssr
-package-lock.json
-package.json
+node_modules/
 .env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
