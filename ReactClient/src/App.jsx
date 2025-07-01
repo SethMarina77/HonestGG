@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home";
+import AnalyzePlayer from "./pages/AnalyzePlayer";
 
 
 const AppLayout = () => {
@@ -19,7 +20,7 @@ const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { path: "/", element: <Home /> },
-      
+      { path: "AnalyzePlayer", element: <AnalyzePlayer /> },
     ],
   },
 ]);

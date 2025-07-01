@@ -37,11 +37,57 @@ app.get("/api/summoner/:gameName/:tagLine", async (req, res) => {
     console.log("Account response received:", accountResponse.data);
 
     // Step 2: Get Match History
-    const matchHistoryUrl = `https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=5`;
+    const matchHistoryUrl = `https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=10`;
     const matchHistoryResponse = await axios.get(matchHistoryUrl, {
       headers: { "X-Riot-Token": process.env.RIOT_API_KEY },
     });
     console.log("Match history received:", matchHistoryResponse.data);
+
+    // Step 2.5: Fetch match details and calculate average KDA (parallel)
+    let totalKills = 0,
+      totalDeaths = 0,
+      totalAssists = 0;
+    const matchIds = matchHistoryResponse.data.slice(0, 10); // limit to 10
+
+    try {
+      const matchPromises = matchIds.map((matchId) => {
+        const matchUrl = `https://americas.api.riotgames.com/lol/match/v5/matches/${matchId}`;
+        return axios.get(matchUrl, {
+          headers: { "X-Riot-Token": process.env.RIOT_API_KEY },
+          timeout: 5000, // 5 seconds timeout per request
+        });
+      });
+
+      const matchResponses = await Promise.all(matchPromises);
+
+      for (const matchResponse of matchResponses) {
+        const participants = matchResponse.data.info.participants;
+        const player = participants.find((p) => p.puuid === puuid);
+        if (player) {
+          totalKills += player.kills;
+          totalDeaths += player.deaths;
+          totalAssists += player.assists;
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching match details:", err.message);
+      return res
+        .status(504)
+        .json({
+          message:
+            "Riot API timed out or is unavailable. Please try again later.",
+        });
+    }
+
+    const gamesCount = matchIds.length;
+    const normalKDA =
+      gamesCount > 0
+        ? ((totalKills + totalAssists) / Math.max(1, totalDeaths)).toFixed(2)
+        : "N/A";
+    const trueKDA =
+      gamesCount > 0
+        ? (totalKills / Math.max(1, totalDeaths)).toFixed(2)
+        : "N/A";
 
     // Step 3: Get Summoner Data
     const summonerUrl = `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`;
@@ -58,10 +104,13 @@ app.get("/api/summoner/:gameName/:tagLine", async (req, res) => {
     // Step 5: Merge all data into a single response
     const summonerData = {
       ...summonerResponse.data,
-      name: returnedGameName, // Add the gameName
-      tagline: returnedTagLine, // Optional: Add the tagline
-      matchHistory: matchHistoryResponse.data, // Add match history
-      profileIconUrl: profileIconUrl, // Add profile icon URL
+      name: returnedGameName,
+      tagline: returnedTagLine,
+      matchHistory: matchHistoryResponse.data,
+      profileIconUrl: profileIconUrl,
+      averageKDA: normalKDA, // for backward compatibility
+      normalKDA,
+      trueKDA,
     };
 
     console.log("Profile Icon URL:", summonerData.profileIconUrl);
