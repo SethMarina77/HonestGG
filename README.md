@@ -2,7 +2,7 @@ Op.GG but it's Honest. This readme will be updated
 
 TO DO LIST:
 
-Establish method to get a players recent 10 games match result
+Establish method to get a players recent 10 games match result (DONE)
 
 determine if they win count > loss count.
 
